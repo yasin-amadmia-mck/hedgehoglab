@@ -1,0 +1,53 @@
+name: Build and Publish Frontend Docker image
+
+on:
+    # Run this action only if changes happen in the `be` folder or the `.github/workflows/build-backend.yml` file
+    push:
+      paths:
+        - fe/**
+        - .github/workflows/build-frontend.yml
+
+jobs:
+  Run-Tests:
+    name: Some NPM Tests
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Run Tests (npm tests)
+          run: |
+            echo "These are dummy tests."
+            echo "Run some tests here"
+
+  push_to_registry:
+    name: Build & Push Docker image to Azure Continer Registry
+    # Only build and push docker image for main branch
+    if: github.ref == 'refs/heads/main' 
+    # Only build and push docker image if Tests are passing
+    needs: [Run-Tests]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:  
+        - name: Checkout
+          uses: actions/checkout@v2    
+          
+        - name: 'Login via Azure CLI'
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+        - name: 'Build and push image to Azure Container Registry'
+          uses: azure/docker-login@v1
+          with:
+            login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+            username: ${{ secrets.REGISTRY_USERNAME }}
+            password: ${{ secrets.REGISTRY_PASSWORD }}
+        - run: |
+            cd fe
+            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
