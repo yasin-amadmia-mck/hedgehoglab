@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: db
+    restart: on-failure
+    ports:
+      - "5434:5434"
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=flask_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      - db
+      - backend
+  backend:
+    image: hedghog/backend
+    container_name: backend
+    restart: on-failure
+    build: 
+      context: be 
+      dockerfile: Dockerfile
+    ports:
+       - "80:80"
+    depends_on: 
+      db:
+        condition: service_healthy
+    networks:
+      - db
+      - backend
+      - frontend
+  frontend:
+    image: hedghog/frontend
+    container_name: frontend
+    restart: on-failure
+    build:
+      context: fe
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - backend
+      - frontend
+
+volumes:
+  database:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+  db:
+    driver: bridge
