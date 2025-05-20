@@ -14,16 +14,27 @@ conn = psycopg2.connect(database="flask_db", user="postgres",
 # create a cursor
 cur = conn.cursor()
 
-# if you already have any table or not id doesnt matter this 
-# will create a products table for you.
+
 cur.execute(
     '''CREATE TABLE IF NOT EXISTS products (id serial \
     PRIMARY KEY, name varchar(100), price float);''')
+cur.execute(
+    '''ALTER TABLE products \
+    DROP CONSTRAINT IF EXISTS foo_con;''')
+cur.execute(
+    '''ALTER TABLE products \
+    ADD CONSTRAINT foo_con UNIQUE (name, price);''')
 
 # Insert some data into the table
 cur.execute(
-    '''INSERT INTO products (name, price) VALUES \
-    ('Apple', 1.99), ('Orange', 0.99), ('Banana', 0.59);''')
+    '''INSERT INTO products (name, price) VALUES ('Apple', 1.99) \
+    ON CONFLICT (name, price) DO NOTHING;''')
+cur.execute(
+    '''INSERT INTO products (name, price) VALUES ('Banana', 2.99) \
+    ON CONFLICT (name, price) DO NOTHING;''')
+cur.execute(
+    '''INSERT INTO products (name, price) VALUES ('Orange', 3.99) \
+    ON CONFLICT (name, price) DO NOTHING;''')
 
 # commit the changes
 conn.commit()
@@ -81,4 +92,4 @@ def update_table():
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=8000)

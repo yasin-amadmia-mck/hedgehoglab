@@ -1,0 +1,77 @@
+name: Run IAAC - Terraform
+
+on:
+    # Run this action only if changes happen in the `terraform` folder or the `.github/workflows` folder
+    push:
+      paths:
+        - infra/**
+        - .github/workflows/iac.yml
+    # Run this action always when there is a pull request to the 'main' branch
+    pull_request:
+      branches:
+        - main
+
+jobs:
+  Run-Tests:
+    name: IAC - Deploy Infra using Terraform
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Setup Nodejs
+          uses: actions/setup-node@v1
+
+        - name: checkout hashicorp/setup-terraform
+          uses: actions/checkout@v2
+          with:
+            repository: 'hashicorp/setup-terraform'
+            path: setup-terraform
+            ref: v1
+
+        - name: setup terraform
+          uses: ./setup-terraform
+          with:
+            terraform_version: 1.10.1
+
+        - name: terraform init -upgrade
+          env:
+            TF_VAR_azurerm_subscription_id: ${{ secrets.AZURERM_SUBSCRIPTION_ID }}
+            TF_VAR_azurerm_tenant_id: ${{ secrets.AZURERM_TENANT_ID }}
+            TF_VAR_azurerm_client_id: ${{ secrets.AZURERM_CLIENT_ID}}
+            TF_VAR_azurerm_client_secret: ${{ secrets.AZURERM_CLIENT_SECRET }}
+          run: |
+            cd infra
+            terraform init -upgrade
+
+        - name: terraform fmt
+          run: |
+            cd infra
+            terraform fmt -check
+
+        - name: terraform validate
+          run: |
+            cd infra
+            terraform validate
+
+        - name: terraform plan
+          env:
+            TF_VAR_azurerm_subscription_id: ${{ secrets.AZURERM_SUBSCRIPTION_ID }}
+            TF_VAR_azurerm_tenant_id: ${{ secrets.AZURERM_TENANT_ID }}
+            TF_VAR_azurerm_client_id: ${{ secrets.AZURERM_CLIENT_ID}}
+            TF_VAR_azurerm_client_secret: ${{ secrets.AZURERM_CLIENT_SECRET }}
+          run: |
+            cd infra
+            terraform plan
+
+        - name: terraform apply
+          env:
+            TF_VAR_azurerm_subscription_id: ${{ secrets.AZURERM_SUBSCRIPTION_ID }}
+            TF_VAR_azurerm_tenant_id: ${{ secrets.AZURERM_TENANT_ID }}
+            TF_VAR_azurerm_client_id: ${{ secrets.AZURERM_CLIENT_ID}}
+            TF_VAR_azurerm_client_secret: ${{ secrets.AZURERM_CLIENT_SECRET }}
+          # Run terraform apply only when branch is `main`
+          if: github.ref == 'refs/heads/main' 
+          run: |
+            cd infra
+            terraform apply -auto-approve

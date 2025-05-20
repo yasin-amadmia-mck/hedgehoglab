@@ -5,5 +5,6 @@ COPY src/ /react-app/src
 COPY package.json /react-app/
 
 RUN npm install
+EXPOSE 3000
 
 CMD ["npm", "start"]

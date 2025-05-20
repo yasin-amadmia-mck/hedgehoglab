@@ -4,7 +4,7 @@ services:
     container_name: db
     restart: on-failure
     ports:
-      - "5434:5434"
+      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=flask_db
@@ -26,7 +26,7 @@ services:
       context: be 
       dockerfile: Dockerfile
     ports:
-       - "80:80"
+       - "8000:8000"
     depends_on: 
       db:
         condition: service_healthy

@@ -7,14 +7,14 @@ function App() {
 
   const handleAdd = async () => {
       try {
-          fetch('http://localhost/create', {
+          fetch('http://localhost:8000/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, price: price })
           })
 
           const fetchData = async () => {
-            const response = await fetch(`http://localhost/`)
+            const response = await fetch(`http://localhost:8000/`)
             const newData  = await response.json()
             setData(newData)
             handleDisplay(newData)
