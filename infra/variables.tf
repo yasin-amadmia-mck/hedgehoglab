@@ -52,3 +52,19 @@ variable "backend_tag" {
   default     = "latest"
   description = "Backend container tag to deploy"
 }
+
+variable "azurerm_subscription_id" {
+  description = "Azure Credentials for Terraform"
+}
+
+variable "azurerm_tenant_id" {
+  description = "Azure Credentials for Terraform"
+}
+
+variable "azurerm_client_id" {
+  description = "Azure Credentials for Terraform"
+}
+
+variable "azurerm_client_secret" {
+  description = "Azure Credentials for Terraform"
+}
